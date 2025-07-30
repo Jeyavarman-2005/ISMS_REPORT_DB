@@ -2,62 +2,77 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: #f5f5f5;
+  min-height: 100vh;
+  /* Remove background-image from here */
+  background-color: #f5f5f5; /* Fallback color */
 }
 
+/* Keep all other styles the same */
+
 .login-box {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px;
+  background: rgba(197, 180, 180, 0.251); /* Semi-transparent white */
+  padding: 2.5rem;
+  border-radius: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 40%;
+  max-width: 420px;
+  backdrop-filter: blur(1px); /* Subtle blur effect */
 }
 
 .login-box h2 {
   text-align: center;
-  margin-bottom: 1.5rem;
-  color: #333;
+  margin-bottom: 1.75rem;
+  color: #f5f5f5;
+  font-size: 1.8rem;
 }
 
 .input-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .input-group label {
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: 500;
+  font-weight: 600;
+  color: #f5f5f5;
 }
 
 .input-group input {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.85rem;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 20px;
   font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.input-group input:focus {
+  border-color: #1976d2;
+  outline: none;
 }
 
 .error-message {
   color: #d32f2f;
-  background-color: #fdecea;
+  background-color: rgba(253, 236, 234, 0.9);
   padding: 0.75rem;
   border-radius: 4px;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
   font-size: 0.9rem;
+  text-align: center;
 }
 
 .login-btn {
   width: 100%;
-  padding: 0.75rem;
-  background-color: #1976d2;
+  padding: 0.85rem;
+  background-color: #1481ed;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 20px;
   font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
+  transition: background-color 0.3s;
 }
 
 .login-btn:hover {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import './Login.css';
+import backgroundImage from '../assets/images/dataaccess.jpg'; // Adjust path as needed
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -18,15 +19,12 @@ const Login = () => {
     try {
       const userData = await api.login(username, password);
       
-      // Check if we got valid user data
       if (!userData || !userData.id) {
         throw new Error('Invalid login response');
       }
 
-      // Store user data in localStorage
       localStorage.setItem('user', JSON.stringify(userData));
       
-      // Redirect based on role
       if (userData.role === 'admin') {
         navigate('/userrole');
       } else {
@@ -40,9 +38,18 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
+    <div 
+      className="login-container"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed'
+      }}
+    >
       <div className="login-box">
-        <h2>Login</h2>
+        <h2>Welcome Back</h2>
         {error && <div className="error-message">{error}</div>}
         
         <form onSubmit={handleLogin}>
@@ -55,6 +62,7 @@ const Login = () => {
               onChange={(e) => setUsername(e.target.value)}
               required
               autoFocus
+              placeholder="Enter your username"
             />
           </div>
           
@@ -66,6 +74,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              placeholder="Enter your password"
             />
           </div>
           
@@ -74,7 +83,11 @@ const Login = () => {
             disabled={isLoading}
             className="login-btn"
           >
-            {isLoading ? 'Logging in...' : 'Login'}
+            {isLoading ? (
+              <span>Logging in...</span>
+            ) : (
+              <span>Login</span>
+            )}
           </button>
         </form>
       </div>
