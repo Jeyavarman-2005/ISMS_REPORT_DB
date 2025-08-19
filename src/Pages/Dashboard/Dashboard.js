@@ -149,8 +149,16 @@ const Dashboard = () => {
     }
 
     const totalNCs = filteredData.length;
-    const openNCs = filteredData.filter(item => item.Status === 'Open').length;
-    const closedNCs = filteredData.filter(item => item.Status === 'Closed').length;
+    const openNCs = filteredData.filter(item => {
+      const status = item.Status || 'Open'; // Default to 'Open' if undefined
+      return status.toLowerCase() === 'open'; // Case-insensitive comparison
+    }).length;
+    
+    const closedNCs = filteredData.filter(item => {
+      const status = item.Status || ''; // Default to empty if undefined
+      return status.toLowerCase() === 'closed'; // Case-insensitive comparison
+    }).length;
+    
     const locations = new Set(filteredData.map(item => item.Location)).size;
 
     return {
