@@ -23,6 +23,12 @@ const Audits = () => {
   const [plants, setPlants] = useState([]);
   const [users, setUsers] = useState([]);
   const [evidenceFiles, setEvidenceFiles] = useState({});
+  const [editPopup, setEditPopup] = useState({
+    isOpen: false,
+    rowIndex: null,
+    field: '',
+    value: ''
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -222,8 +228,29 @@ const Audits = () => {
     }
   };
 
-  const toggleRowExpand = (rowIndex) => {
-    setExpandedRow(expandedRow === rowIndex ? null : rowIndex);
+  const openEditPopup = (rowIndex, field) => {
+    setEditPopup({
+      isOpen: true,
+      rowIndex,
+      field,
+      value: filteredData[rowIndex][field] || ''
+    });
+  };
+
+  const closeEditPopup = () => {
+    setEditPopup({
+      isOpen: false,
+      rowIndex: null,
+      field: '',
+      value: ''
+    });
+  };
+
+  const saveEditPopup = () => {
+    if (editPopup.rowIndex !== null) {
+      handleCellUpdate(editPopup.rowIndex, editPopup.field, editPopup.value);
+    }
+    closeEditPopup();
   };
 
   return (
@@ -322,7 +349,6 @@ const Audits = () => {
                       <th>Closing Date</th>
                       <th>Status</th>
                       <th>Evidence</th>
-                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -342,29 +368,44 @@ const Audits = () => {
                           <td className={`${styles.tableCell} ${styles.observationCell}`}>
                             {row.ObservationDescription}
                           </td>
-                          <td className={`${styles.tableCell} ${styles.editableCell}`}>
-                            <textarea
-                              value={row.RootCauseAnalysis || ''}
-                              onChange={(e) => handleCellUpdate(rowIndex, 'RootCauseAnalysis', e.target.value)}
-                              placeholder="Enter analysis..."
-                              className={styles.editableField}
-                            />
+                          <td className={styles.tableCell}>
+                            <div className={styles.editFieldContainer}>
+                              <div className={styles.fieldContent}>
+                                {row.RootCauseAnalysis }
+                              </div>
+                              <button 
+                                className={styles.editButton}
+                                onClick={() => openEditPopup(rowIndex, 'RootCauseAnalysis')}
+                              >
+                                <FiEdit2 /> Edit
+                              </button>
+                            </div>
                           </td>
-                          <td className={`${styles.tableCell} ${styles.editableCell}`}>
-                            <textarea
-                              value={row.CorrectiveAction || ''}
-                              onChange={(e) => handleCellUpdate(rowIndex, 'CorrectiveAction', e.target.value)}
-                              placeholder="Enter action..."
-                              className={styles.editableField}
-                            />
+                          <td className={styles.tableCell}>
+                            <div className={styles.editFieldContainer}>
+                              <div className={styles.fieldContent}>
+                                {row.CorrectiveAction }
+                              </div>
+                              <button 
+                                className={styles.editButton}
+                                onClick={() => openEditPopup(rowIndex, 'CorrectiveAction')}
+                              >
+                                <FiEdit2 /> Edit
+                              </button>
+                            </div>
                           </td>
-                          <td className={`${styles.tableCell} ${styles.editableCell}`}>
-                            <textarea
-                              value={row.PreventiveAction || ''}
-                              onChange={(e) => handleCellUpdate(rowIndex, 'PreventiveAction', e.target.value)}
-                              placeholder="Enter action..."
-                              className={styles.editableField}
-                            />
+                          <td className={styles.tableCell}>
+                            <div className={styles.editFieldContainer}>
+                              <div className={styles.fieldContent}>
+                                {row.PreventiveAction}
+                              </div>
+                              <button 
+                                className={styles.editButton}
+                                onClick={() => openEditPopup(rowIndex, 'PreventiveAction')}
+                              >
+                                <FiEdit2 /> Edit
+                              </button>
+                            </div>
                           </td>
                           <td className={`${styles.tableCell} ${styles.editableCell}`}>
                             <select
@@ -443,55 +484,7 @@ const Audits = () => {
                               </div>
                             )}
                           </td>
-                          <td className={styles.tableCell}>
-                            <button 
-                              className={styles.expandButton}
-                              onClick={() => toggleRowExpand(rowIndex)}
-                              title="Edit details"
-                            >
-                              <FiEdit2 />
-                            </button>
-                          </td>
                         </tr>
-                        {expandedRow === rowIndex && (
-                          <tr className={styles.expandedRow}>
-                            <td colSpan="15">
-                              <div className={styles.expandedContent}>
-                                <h4>Detailed View</h4>
-                                <div className={styles.expandedGrid}>
-                                  <div>
-                                    <label>Observation Description:</label>
-                                    <p>{row.ObservationDescription}</p>
-                                  </div>
-                                  <div>
-                                    <label>Root Cause Analysis:</label>
-                                    <textarea
-                                      value={row.RootCauseAnalysis || ''}
-                                      onChange={(e) => handleCellUpdate(rowIndex, 'RootCauseAnalysis', e.target.value)}
-                                      className={styles.expandedTextarea}
-                                    />
-                                  </div>
-                                  <div>
-                                    <label>Corrective Action:</label>
-                                    <textarea
-                                      value={row.CorrectiveAction || ''}
-                                      onChange={(e) => handleCellUpdate(rowIndex, 'CorrectiveAction', e.target.value)}
-                                      className={styles.expandedTextarea}
-                                    />
-                                  </div>
-                                  <div>
-                                    <label>Preventive Action:</label>
-                                    <textarea
-                                      value={row.PreventiveAction || ''}
-                                      onChange={(e) => handleCellUpdate(rowIndex, 'PreventiveAction', e.target.value)}
-                                      className={styles.expandedTextarea}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
                       </React.Fragment>
                     ))}
                   </tbody>
@@ -501,6 +494,35 @@ const Audits = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Popup */}
+      {editPopup.isOpen && (
+        <div className={styles.editPopupOverlay}>
+          <div className={styles.editPopup}>
+            <h3>Edit {editPopup.field.replace(/([A-Z])/g, ' $1').trim()}</h3>
+            <textarea
+              value={editPopup.value}
+              onChange={(e) => setEditPopup({...editPopup, value: e.target.value})}
+              className={styles.popupTextarea}
+              autoFocus
+            />
+            <div className={styles.popupButtons}>
+              <button 
+                className={styles.popupCancel}
+                onClick={closeEditPopup}
+              >
+                Cancel
+              </button>
+              <button 
+                className={styles.popupSave}
+                onClick={saveEditPopup}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

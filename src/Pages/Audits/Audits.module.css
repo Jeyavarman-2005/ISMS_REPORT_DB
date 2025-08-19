@@ -15,9 +15,10 @@
 }
 
 .auditContent {
-  flex: 1;
-  padding: 20px 0;
-  background-color: #f8fafc;
+  overflow: hidden; /* Prevent the entire content area from scrolling */
+  height: calc(100vh - 120px); /* Adjust based on your header height */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Compact Header Row */
@@ -59,7 +60,7 @@
 }
 
 .searchBox input {
-  width: 100%;
+  width: 80%;
   padding: 10px 15px 10px 38px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -193,12 +194,12 @@
 
 .tableContainer {
   width: 100%;
-  max-height: calc(100vh - 200px);
+  max-height: calc(100vh - 180px);
   overflow: auto;
 }
 
 .auditTable {
-  width: 100%;
+  width: 0%;
   border-collapse: collapse;
   min-width: fit-content;
 }
@@ -213,14 +214,15 @@
 .auditTable th {
   padding: 12px 15px;
   text-align: left;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  color: #1e3a8a;
+  color: #1042c9;
   background-color: #f1f5f9;
   border-bottom: 2px solid #e2e8f0;
   border-right: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
+  white-space: nowrap; /* This is the key property to prevent wrapping */
 }
 
 .auditTable th:last-child {
@@ -247,7 +249,7 @@
 
 /* Cell-specific styles */
 .observationCell {
-  min-width: 200px;
+  min-width: 300px;
   max-width: 300px;
 }
 
@@ -256,7 +258,7 @@
 }
 
 .editableField {
-  width: 100%;
+  width: 80%;
   padding: 8px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
@@ -337,7 +339,7 @@
 
 /* Responsibility Select */
 .responsibilitySelect {
-  width: 100%;
+  width: 110%;
   padding: 8px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
@@ -349,7 +351,7 @@
 
 /* Evidence Cell */
 .evidenceCell {
-  min-width: 180px;
+  min-width: 120px;
 }
 
 .evidenceDownload,
@@ -477,6 +479,120 @@
   font-size: 13px;
   resize: vertical;
   background-color: white;
+}
+
+/* Add these new styles to your existing .module.css file */
+
+.editFieldContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldContent {
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #f8fafc;
+  min-height: 40px;
+  max-height: 100px;
+  overflow-y: auto;
+  word-break: break-word;
+}
+
+.editButton {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.editButton:hover {
+  background-color: #bae6fd;
+}
+
+/* Edit Popup Styles */
+.editPopupOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.editPopup {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 600px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.editPopup h3 {
+  margin-top: 0;
+  color: #1e3a8a;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+.popupTextarea {
+  width: 95%;
+  min-height: 200px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  resize: vertical;
+  margin-bottom: 15px;
+}
+
+.popupButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.popupCancel,
+.popupSave {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.popupCancel {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.popupCancel:hover {
+  background-color: #e2e8f0;
+}
+
+.popupSave {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+}
+
+.popupSave:hover {
+  background-color: #2563eb;
 }
 
 /* Loading Spinner */
