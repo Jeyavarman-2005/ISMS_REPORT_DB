@@ -152,7 +152,12 @@ const UserRole = () => {
 
   return (
     <div className={styles.adminDashboard}>
-      <Header userRole={user.role}  userName={user.username} userDepartment={user.department} userID={user.UserID}/>
+      <Header 
+        userRole={user.role} 
+        userName={user.username} 
+        userDepartment={user.department} 
+        userID={user.UserID}
+      />
       <ToastContainer position="top-right" autoClose={5000} />
       
       <div className={styles.adminContainer}>
