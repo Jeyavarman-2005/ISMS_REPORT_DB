@@ -25,6 +25,7 @@ const Login = () => {
 
     try {
       const userData = await api.login(username, password);
+      console.log('Login response:', userData); // Add this line
       
       if (!userData?.id) {
         throw new Error('Invalid login response');
