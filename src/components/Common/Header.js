@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
@@ -8,15 +8,29 @@ import {
   FiFileText, 
   FiFile, 
   FiUser, 
-  FiChevronDown 
+  FiChevronDown,
+  FiX
 } from 'react-icons/fi';
 
-const Header = ({ userRole, userData }) => {
+const Header = () => {  // Remove props
   const navigate = useNavigate();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showUnauthorizedPopup, setShowUnauthorizedPopup] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+
+  // Get user data directly from localStorage on component mount
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (userData) {
+      setUserRole(userData.role);
+      console.log('User role from localStorage:', userData.role); // Debug log
+    }
+  }, []);
+
   const getMainHeaderStyle = () => {
     return { backgroundColor: '#1e40af' }; 
   };
+  
   const getNavHeaderStyle = () => {
     return { 
       background: 'linear-gradient(to right, #1058d3ff, #1a202c)'
@@ -24,7 +38,16 @@ const Header = ({ userRole, userData }) => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('user');
     navigate('/');
+  };
+
+  const handleUserManagementClick = (e) => {
+    if (userRole !== 'admin') {
+      e.preventDefault();
+      setShowUnauthorizedPopup(true);
+    }
+    // Admin users will proceed normally
   };
 
   return (
@@ -53,11 +76,37 @@ const Header = ({ userRole, userData }) => {
               </div>
             </li>
             <li>
-            <a href="/userrole">User Management</a>
-          </li>
+              <a 
+                href="/userrole" 
+                onClick={handleUserManagementClick}
+              >
+                User Management
+              </a>
+            </li>
           </ul>
         </nav>
       </header>
+
+      {/* Unauthorized Access Popup */}
+      {showUnauthorizedPopup && (
+        <div className={styles.popupOverlay}>
+          <div className={styles.popupContainer}>
+            <button className={styles.closeButton} onClick={() => setShowUnauthorizedPopup(false)}>
+              <FiX />
+            </button>
+            <div className={styles.popupContent}>
+              <h3>Unauthorized Access</h3>
+              <p>Only administrators can access User Management.</p>
+              <button 
+                className={styles.popupButton} 
+                onClick={() => setShowUnauthorizedPopup(false)}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
