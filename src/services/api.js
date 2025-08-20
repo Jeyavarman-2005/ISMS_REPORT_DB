@@ -123,55 +123,64 @@ async deleteUser(userId) {
 }
 
   async updateAuditRecord(auditType, record) {
-  const response = await fetch(`${this.baseUrl}/audits/update`, {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${JSON.parse(localStorage.getItem('user'))?.token}`
-    },
-    body: JSON.stringify({ 
-      type: auditType,  // Changed from auditType to type to match backend expectation
-      record: {
-        ...record,
-        // Ensure date fields are properly formatted
-        DateOfAudit: record.DateOfAudit || null,
-        ClosingDates: record.ClosingDates || null
+    const user = JSON.parse(localStorage.getItem('user'));
+    const token = user?.token;
+    
+    try {
+      const response = await fetch(`${this.baseUrl}/audits/update`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          type: auditType,
+          record: {
+            ...record,
+            // Ensure date fields are properly formatted
+            DateOfAudit: record.DateOfAudit || null,
+            ClosingDates: record.ClosingDates || null
+          }
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to update record');
       }
-    }),
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || 'Failed to update record');
+      
+      return await response.json();
+    } catch (err) {
+      console.error('Update record error:', err);
+      throw err;
+    }
   }
-  
-  return await response.json();
-}
+
 
   async uploadEvidence(formData) {
-  const user = JSON.parse(localStorage.getItem('user'));
-  const token = user?.token;
-  
-  try {
-    const response = await fetch(`${this.baseUrl}/audits/upload-evidence`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    });
+    const user = JSON.parse(localStorage.getItem('user'));
+    const token = user?.token;
+    
+    try {
+      const response = await fetch(`${this.baseUrl}/audits/upload-evidence`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || 'Evidence upload failed');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Evidence upload failed');
+      }
+
+      return await response.json();
+    } catch (err) {
+      console.error('Evidence upload error:', err);
+      throw err;
     }
-
-    return await response.json();
-  } catch (err) {
-    console.error('Evidence upload error:', err);
-    throw err;
   }
-}
 
   async checkLastUploadDate(auditType) {
     const response = await fetch(`${this.baseUrl}/audits/last-upload?type=${auditType}`);
