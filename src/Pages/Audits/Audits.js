@@ -4,7 +4,7 @@ import api from '../../Services/api';
 import Header from '../../components/Common/Header';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { FiUpload, FiDownload, FiRefreshCw, FiSearch, FiEdit2, FiFile, FiX, FiFilter } from 'react-icons/fi';
+import { FiUpload, FiDownload, FiRefreshCw, FiSearch, FiEdit2, FiFile, FiX, FiFilter, FiLock } from 'react-icons/fi';
 import styles from './Audits.module.css';
 
 const Audits = () => {
@@ -145,7 +145,7 @@ const Audits = () => {
       const formData = new FormData();
       formData.append('file', evidenceFiles[rowIndex]);
       const recordId = row.ID || row.id || row.Id || row._id;
-      formData.append('record_id', row.ID.toString());
+      formData.append('record_id', recordId.toString());
       formData.append('audit_type', auditType);
 
       const response = await api.uploadEvidence(formData);
@@ -154,10 +154,12 @@ const Audits = () => {
       const dataIndex = auditData.findIndex(item => item.ID === row.ID);
       
       if (dataIndex !== -1) {
+        const currentDate = new Date().toISOString().split('T')[0];
         updatedData[dataIndex] = {
           ...updatedData[dataIndex],
           Evidence: response.filename,
-          Status: 'Closed'
+          Status: 'Closed',
+          ClosingDates: currentDate
         };
         
         setAuditData(updatedData);
@@ -215,6 +217,20 @@ const Audits = () => {
   };
 
   const handleCellUpdate = async (rowIndex, columnName, value) => {
+    const row = filteredData[rowIndex];
+    
+    // Prevent non-admin users from modifying closed records
+    if (!isAdmin && row.Status === 'Closed') {
+      toast.warning('This record is closed and cannot be modified');
+      return;
+    }
+
+    // Only admin can manually change status and closing date
+    if (!isAdmin && (columnName === 'Status' || columnName === 'ClosingDates')) {
+      toast.warning('Only administrators can modify status and closing dates');
+      return;
+    }
+
     const updatedData = [...auditData];
     updatedData[rowIndex][columnName] = value;
     setAuditData(updatedData);
@@ -229,6 +245,14 @@ const Audits = () => {
   };
 
   const openEditPopup = (rowIndex, field) => {
+    const row = filteredData[rowIndex];
+    
+    // Prevent editing closed records for non-admin users
+    if (!isAdmin && row.Status === 'Closed') {
+      toast.warning('This record is closed and cannot be modified');
+      return;
+    }
+
     setEditPopup({
       isOpen: true,
       rowIndex,
@@ -251,6 +275,28 @@ const Audits = () => {
       handleCellUpdate(editPopup.rowIndex, editPopup.field, editPopup.value);
     }
     closeEditPopup();
+  };
+
+  const renderEditButton = (rowIndex, field) => {
+    const row = filteredData[rowIndex];
+    const isClosed = row.Status === 'Closed';
+    
+    if (isClosed && !isAdmin) {
+      return (
+        <button className={styles.lockedButton} disabled>
+          <FiLock /> Locked
+        </button>
+      );
+    }
+    
+    return (
+      <button 
+        className={styles.editButton}
+        onClick={() => openEditPopup(rowIndex, field)}
+      >
+        <FiEdit2 /> Edit
+      </button>
+    );
   };
 
   return (
@@ -371,27 +417,17 @@ const Audits = () => {
                           <td className={styles.tableCell}>
                             <div className={styles.editFieldContainer}>
                               <div className={styles.fieldContent}>
-                                {row.RootCauseAnalysis }
+                                {row.RootCauseAnalysis}
                               </div>
-                              <button 
-                                className={styles.editButton}
-                                onClick={() => openEditPopup(rowIndex, 'RootCauseAnalysis')}
-                              >
-                                <FiEdit2 /> Edit
-                              </button>
+                              {renderEditButton(rowIndex, 'RootCauseAnalysis')}
                             </div>
                           </td>
                           <td className={styles.tableCell}>
                             <div className={styles.editFieldContainer}>
                               <div className={styles.fieldContent}>
-                                {row.CorrectiveAction }
+                                {row.CorrectiveAction}
                               </div>
-                              <button 
-                                className={styles.editButton}
-                                onClick={() => openEditPopup(rowIndex, 'CorrectiveAction')}
-                              >
-                                <FiEdit2 /> Edit
-                              </button>
+                              {renderEditButton(rowIndex, 'CorrectiveAction')}
                             </div>
                           </td>
                           <td className={styles.tableCell}>
@@ -399,12 +435,7 @@ const Audits = () => {
                               <div className={styles.fieldContent}>
                                 {row.PreventiveAction}
                               </div>
-                              <button 
-                                className={styles.editButton}
-                                onClick={() => openEditPopup(rowIndex, 'PreventiveAction')}
-                              >
-                                <FiEdit2 /> Edit
-                              </button>
+                              {renderEditButton(rowIndex, 'PreventiveAction')}
                             </div>
                           </td>
                           <td className={`${styles.tableCell} ${styles.editableCell}`}>
@@ -412,6 +443,7 @@ const Audits = () => {
                               value={row.Responsibility || ''}
                               onChange={(e) => handleCellUpdate(rowIndex, 'Responsibility', e.target.value)}
                               className={styles.responsibilitySelect}
+                              disabled={!isAdmin && row.Status === 'Closed'}
                             >
                               <option value="">Select</option>
                               {users.map(user => (
@@ -427,6 +459,7 @@ const Audits = () => {
                               value={row.ClosingDates || ''}
                               onChange={(e) => handleCellUpdate(rowIndex, 'ClosingDates', e.target.value)}
                               className={styles.dateInput}
+                              disabled={!isAdmin}
                             />
                           </td>
                           <td className={`${styles.tableCell} ${styles.editableCell}`}>
@@ -434,7 +467,7 @@ const Audits = () => {
                               value={row.Status || 'Open'}
                               onChange={(e) => handleCellUpdate(rowIndex, 'Status', e.target.value)}
                               className={`${styles.statusSelect} ${styles[row.Status?.toLowerCase()]}`}
-                              disabled={!isAdmin && row.Status === 'Closed'}
+                              disabled={!isAdmin}
                             >
                               <option value="Open">Open</option>
                               <option value="Closed">Closed</option>
@@ -468,8 +501,12 @@ const Audits = () => {
                                   accept=".pdf,.pptx,.png,.jpeg,.jpg"
                                   onChange={(e) => handleEvidenceFileChange(e, rowIndex)}
                                   style={{ display: 'none' }}
+                                  disabled={row.Status === 'Closed' && !isAdmin}
                                 />
-                                <label htmlFor={`evidence-${rowIndex}`} className={styles.fileLabel}>
+                                <label 
+                                  htmlFor={`evidence-${rowIndex}`} 
+                                  className={`${styles.fileLabel} ${row.Status === 'Closed' && !isAdmin ? styles.disabledLabel : ''}`}
+                                >
                                   <FiFile /> Choose File
                                 </label>
                                 {evidenceFiles[rowIndex] && (
