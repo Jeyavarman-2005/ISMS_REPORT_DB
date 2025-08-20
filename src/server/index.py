@@ -113,7 +113,7 @@ def login():
         return jsonify({
             'id': user_id,
             'username': username,
-            'role': role,
+            'role': role,  # Make sure this is 'admin' for admin users
             'token': token
         })
     
@@ -437,32 +437,54 @@ def update_audit_record():
     if not record or 'SN' not in record or 'Location' not in record or 'DateOfAudit' not in record:
         return jsonify({'error': 'Missing required record data'}), 400
     
+    # Check if user is admin
+    auth_header = request.headers.get('Authorization')
+    is_admin = False
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+        user = verify_token(token)
+        is_admin = user and user['role'] == 'admin'
+    
     conn = get_db()
     cursor = conn.cursor()
     
     try:
+        # For non-admin users, prevent changing Status and ClosingDates if record is closed
+        if not is_admin:
+            # First check current status of the record
+            cursor.execute(f"""
+                SELECT Status FROM {audit_type}_audits 
+                WHERE SN = ? AND Location = ? AND DateOfAudit = ?
+            """, (record['SN'], record['Location'], record['DateOfAudit']))
+            current_status = cursor.fetchone()
+            
+            if current_status and current_status[0] == 'Closed':
+                return jsonify({'error': 'Record is closed and cannot be modified'}), 403
+        
+        # Prepare update fields
+        update_fields = {
+            'RootCauseAnalysis': record.get('RootCauseAnalysis'),
+            'CorrectiveAction': record.get('CorrectiveAction'),
+            'PreventiveAction': record.get('PreventiveAction'),
+            'Responsibility': record.get('Responsibility'),
+            'Evidence': record.get('Evidence')
+        }
+        
+        # Only allow admin to update Status and ClosingDates
+        if is_admin:
+            update_fields['Status'] = record.get('Status', 'Open')
+            update_fields['ClosingDates'] = record.get('ClosingDates')
+        
+        # Build the update query
+        set_clause = ', '.join([f"{field} = ?" for field in update_fields.keys()])
+        values = list(update_fields.values())
+        values.extend([record['SN'], record['Location'], record['DateOfAudit']])
+        
         cursor.execute(f"""
             UPDATE {audit_type}_audits SET
-                RootCauseAnalysis = ?,
-                CorrectiveAction = ?,
-                PreventiveAction = ?,
-                Responsibility = ?,
-                ClosingDates = ?,
-                Status = ?,
-                Evidence = ?
+                {set_clause}
             WHERE SN = ? AND Location = ? AND DateOfAudit = ?
-        """, (
-            record.get('RootCauseAnalysis'),
-            record.get('CorrectiveAction'),
-            record.get('PreventiveAction'),
-            record.get('Responsibility'),
-            record.get('ClosingDates'),
-            record.get('Status', 'Open'),
-            record.get('Evidence'),
-            record['SN'],
-            record['Location'],
-            record['DateOfAudit']
-        ))
+        """, values)
         
         if cursor.rowcount == 0:
             return jsonify({'error': 'Record not found or not updated'}), 404
@@ -479,7 +501,6 @@ def update_audit_record():
 @handle_errors
 def upload_evidence():
     # Check if file exists
-
     print("Upload evidence endpoint hit!")  # Debug line
     print(request.files)  # Debug line
 
@@ -512,15 +533,20 @@ def upload_evidence():
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(filepath)
 
+    # Get current date in YYYY-MM-DD format
+    current_date = datetime.now().strftime('%Y-%m-%d')
+
     # Update database record
     conn = get_db()
     cursor = conn.cursor()
     try:
         cursor.execute(f"""
             UPDATE {audit_type}_audits
-            SET Evidence = ?, Status = 'Closed'
+            SET Evidence = ?, 
+                Status = 'Closed',
+                ClosingDates = ?
             WHERE ID = ?
-        """, (filename, record_id))
+        """, (filename, current_date, record_id))
         conn.commit()
         return jsonify({'success': True, 'filename': filename})
     except Exception as e:
